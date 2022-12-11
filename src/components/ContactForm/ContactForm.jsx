@@ -1,12 +1,16 @@
-// import React, { Component } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useState } from 'react';
+import { addContact } from 'redux/contactsSlice';
+import { getContacts } from 'redux/selectors';
 import { nanoid } from 'nanoid';
+import PropTypes from 'prop-types';
 import { Form, SubmitButton, FormInput } from './ContactForm.styled';
 
-export default function ContactForm({ onSubmit }) {
+export function ContactForm() {
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
-
+  const dispatch = useDispatch();
+  const contacts = useSelector(getContacts);
   const handleInputChange = e => {
     const { name, value } = e.currentTarget;
 
@@ -22,53 +26,57 @@ export default function ContactForm({ onSubmit }) {
 
   const handleSubmit = e => {
     e.preventDefault();
-    const contact = {
-      id: nanoid(6),
-      name,
-      number,
-    };
+    const form = e.target;
+    const uniqueEl = contacts.find(el => el.name === form.name.value);
 
-    onSubmit(contact);
+    if (!uniqueEl) {
+      dispatch(addContact({ name, number, id: nanoid() }));
+    }
+    if (uniqueEl) {
+      alert(`${form.name.value} is already in contacts`);
+    }
     setName('');
-    setNumber('')
+    setNumber('');
+    form.reset();
   };
 
-  
+  return (
+    <Form onSubmit={handleSubmit}>
+      <label>
+        Name
+        <br />
+        <FormInput
+          type="text"
+          name="name"
+          value={name}
+          onChange={handleInputChange}
+          pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
+          title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
+          required
+          autocomplete="off"
+        />
+      </label>
 
-  
-    return (
-      <Form onSubmit={handleSubmit}>
-        <label>
-          Name
-          <br />
-          <FormInput
-            type="text"
-            name="name"
-            value={name}
-            onChange={handleInputChange}
-            pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
-            title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
-            required
-            autocomplete="off"
-          />
-        </label>
+      <label>
+        Number
+        <br />
+        <FormInput
+          type="tel"
+          name="number"
+          value={number}
+          onChange={handleInputChange}
+          pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
+          title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
+          required
+        />
+      </label>
 
-        <label>
-          Number
-          <br />
-          <FormInput
-            type="tel"
-            name="number"
-            value={number}
-            onChange={handleInputChange}
-            pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
-            title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
-            required
-          />
-        </label>
-
-        <SubmitButton type="submit">Add contact</SubmitButton>
-      </Form>
-    );
-  
+      <SubmitButton type="submit">Add contact</SubmitButton>
+    </Form>
+  );
 }
+
+ContactForm.propTypes = {
+  name: PropTypes.string,
+  number: PropTypes.string,
+};
